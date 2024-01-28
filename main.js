@@ -1,56 +1,32 @@
-import BreatherScene from "./Scene/BreatherScene.js";
-import Cube from "./Objects/Cube.js";
-import Torus from "./Objects/Torus.js";
+import BreatherScene from "./Demonstration/BreatherScene.js";
+import Cube from "./Library/Objects/Cube.js";
+import Torus from "./Demonstration/Torus.js";
 
-import Scene from "./Scene/Scene.js";
-import TestScene from "./Scene/TestScene.js";
-import Breather from "./Objects/Breather.js";
-import Sphere from "./Objects/Sphere.js";
-import Plane from "./Objects/Plane.js";
-import SceneNode from "./Objects/SceneNode.js"
+import Scene from "./Library/Scene/Scene.js";
+import Breather from "./Demonstration/Breather.js";
+import Sphere from "./Library/Objects/Sphere.js";
+import Plane from "./Library/Objects/Plane.js";
+import SceneNode from "./Library/Objects/SceneNode.js"
 
-import Head from "./Octopus/Head.js";
-import Leg from "./Octopus/Leg.js";
-import Octopus from "./Octopus/Octopus.js";
-import KleinBottle from "./Objects/KleinBottle.js";
-import TexturedCube from "./Objects/TexturedCube/TexturedCube.js";
-import Hemisphere from "./Objects/Hemisphere.js";
+import Octopus from "./Demonstration/Octopus/Octopus.js";
+import TexturedCube from "./Library/Objects/TexturedCube/TexturedCube.js";
+import Hemisphere from "./Library/Objects/Hemisphere.js";
 
-function main(){
-    //!Our problem with vertex rendering can be seen clearly here
-    /*
-    let cubeScene = new Scene();
-    cubeScene.object = new Cube();
-    instantiateUI(cubeScene);
-    cubeScene.renderUnconditional();
-    */
-
-    breatherTest();
-    //test();
-
-    /*Experiment with multi-screen rendering success
-    let experimentalScene = new BreatherScene("second-screen");
-    experimentalScene.renderUnconditional();
-    for (let i = 0; i < 2; i++){
-        experimentalScene.zoomIn();
-    }
-
-    experimentalScene.setTestParams()
-    experimentalScene.updateTheta(45);
-    */
-    
+window.onload = () => {
+    test();
 }
 
+//Test functions
 function breatherTest(){
     let scene = new Scene();
-    scene.root.nodes.push(new SceneNode(new Breather()));
+    scene.root.nodes.push(new SceneNode(new Sphere()));
     scene.normalType = "trueNormals"
     scene.treeRenderMultiLevel();
     instantiateUI(scene);
 }
 function textureTest(){
     let scene = new Scene();
-    scene.root.nodes.push(new SceneNode(new TexturedCube("/Objects/TexturedCube/steve-head.png")));
+    scene.root.nodes.push(new SceneNode(new TexturedCube("/Library/Objects/TexturedCube/steve-head.png")));
     scene.treeRenderMultiLevel();
     instantiateUI(scene);  
 }
@@ -61,13 +37,6 @@ function trueNormalTest(){
     scene.normalType = "trueNormals";
     scene.treeRenderMultiLevel();
     instantiateUI(scene);  
-}
-//Doesn't work at all.
-function kleinTest(){
-    let scene = new Scene();
-    scene.root.nodes.push(new SceneNode(new KleinBottle()));
-    scene.treeRenderMultiLevel();
-    instantiateUI(scene); 
 }
 
 function lightingTest(){
@@ -91,7 +60,7 @@ function test(){
     planeNode.scaleBy = [10, 10, 10];
     planeNode.translateBy = [0 , 0, 3];
 
-    let steve = new SceneNode(new TexturedCube("/Objects/TexturedCube/steve-head.png"))
+    let steve = new SceneNode(new TexturedCube("/Library/Objects/TexturedCube/steve-head.png"))
     breatherScene.root.nodes.push(steve);
 
     let sphereNode = new SceneNode(new Sphere());
@@ -101,8 +70,7 @@ function test(){
 
     breatherScene.root.nodes.push(planeNode);
     breatherScene.root.nodes.push(sphereNode);
-
-    //breatherScene.root.nodes.push(new Octopus());
+    breatherScene.root.nodes.push(new Octopus());
 
     instantiateCharacterControls(breatherScene, steve);
 
@@ -110,8 +78,8 @@ function test(){
     instantiateUI(breatherScene);
 }
 
-window.onload = main;
 
+//Below are UI functions
 //TODO should probably either set the values within the sliders to the values in the breather object or vice versa
 //TODO specify that this is a sidebar for a breather scene
 function instantiateSidebar(scene){
@@ -175,7 +143,6 @@ function instantiateCharacterControls(scene, charNode){
     document.addEventListener("keyup", (event) => keyupHandler(event, scene, charNode), false) //TODO
 }
 
-//!!!!!!! BUG! THE TRANSLATION IS APPLIED ACCORDIN TO CAMERA ORIENTATION
 let speed = 0.3;
 function keydownHandler(event, scene, charNode){
     var keyCode = event.keyCode;
