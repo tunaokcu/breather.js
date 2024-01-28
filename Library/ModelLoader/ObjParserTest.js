@@ -22,19 +22,6 @@ async function modelTest(objSrc, textureSrc){
     else{
         modelRenderer.render(model)
     }
-
-
-    /*    
-    console.log("name", model.name);
-
-    console.log("vertices", model.vertices); 
-    console.log("texture coordinates", model.textureCoordinates);
-    console.log("vertex normals", model.vertexNormals);
-
-    console.log("vertex indices", model.vertexIndices);
-    console.log("texture indices", model.textureIndices);
-    console.log("normal indices", model.normalIndices);
-    */
     
     
     //model.texture.onload = () => modelRenderer.render(model);
@@ -51,20 +38,6 @@ async function steveTest(){
     let model = parser.parse(text);
     model.constructFaces();
     model.loadTexture("./steve/Minecraft_steve_skin.jpg");
-
-
-
-    /*    
-    console.log("name", model.name);
-
-    console.log("vertices", model.vertices); 
-    console.log("texture coordinates", model.textureCoordinates);
-    console.log("vertex normals", model.vertexNormals);
-
-    console.log("vertex indices", model.vertexIndices);
-    console.log("texture indices", model.textureIndices);
-    console.log("normal indices", model.normalIndices);
-    */
     
     
     let modelRenderer = new ModelRenderer();     

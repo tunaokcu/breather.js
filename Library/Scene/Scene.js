@@ -116,8 +116,6 @@ export default class Scene{
 
 
     drawTexture(model){
-        console.log("called");
-
         let gl = this.gl;
         
         // create and bind texture
@@ -186,9 +184,6 @@ export default class Scene{
         node.object.normals = node.object.meshBasedNormals();
         node.object.vertices = node.object.meshBasedVertices();
         */
-       
-        console.log(flatten(node.object.normals));
-        console.log(flatten(node.object.vertices));
 
         //!THE ORDER MATTERS... WHY? (if we buffer the vertices first then the normals it doesn't work)
         //Buffer the normals

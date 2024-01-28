@@ -32,8 +32,6 @@
         }
 
         meshIsCalculated(){
-            console.log("here")
-            console.log(this.hasOwnProperty(mesh))
             return this.hasOwnProperty(mesh);
         }
 

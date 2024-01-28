@@ -87,8 +87,6 @@ export default class ModelRenderer{
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             }
 
-            console.log(flatten(model.trianglesTexture));
-
             gl.bindBuffer( gl.ARRAY_BUFFER, this.uvBuffer );
             gl.bufferData(gl.ARRAY_BUFFER, flatten(model.trianglesTexture), gl.STATIC_DRAW);
             gl.vertexAttribPointer( this.uvPosition, 2, gl.FLOAT, false, 0, 0 );
@@ -115,7 +113,6 @@ export default class ModelRenderer{
         gl.vertexAttribPointer( this.vPosition, 3, gl.FLOAT, false, 0, 0 );
         gl.enableVertexAttribArray( this.vPosition );
 
-        console.log("rendered");
         this.rerender(model);
     }
 

@@ -153,8 +153,6 @@ export default class TexturedCube extends Cube{
     hasTexture(){ return true; }
     textureIsLoaded(){ return this.loaded; }
     getUvs(){ 
-        console.log(this.getSolidVertices().length)
-        console.log(flatten(uvs))
         return flatten(uvs); 
     }
     async loadTexture(){
