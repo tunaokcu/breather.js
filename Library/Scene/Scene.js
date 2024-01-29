@@ -45,7 +45,7 @@ export default class Scene{
 
         this.vertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, MAX_VERTICES*VERTEX_SIZE, this.gl.STATIC_DRAW);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, MAX_VERTICES*VERTEX_SIZE, this.gl.DYNAMIC_DRAW);
 
         this.vPosition = this.gl.getAttribLocation( this.program, "vPosition" );
         this.gl.vertexAttribPointer( this.vPosition, 4, this.gl.FLOAT, false, 0, 0 );
@@ -53,7 +53,7 @@ export default class Scene{
 
         this.normalBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalBuffer);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, MAX_VERTICES*NORMAL_SIZE, this.gl.STATIC_DRAW);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, MAX_VERTICES*NORMAL_SIZE, this.gl.DYNAMIC_DRAW);
 
         this.vNormal = this.gl.getAttribLocation( this.program, "vNormal" );
         this.gl.vertexAttribPointer( this.vNormal, 3, this.gl.FLOAT, false, 0, 0 ); 
@@ -149,7 +149,7 @@ export default class Scene{
         }
 
         gl.bindBuffer( gl.ARRAY_BUFFER, this.uvBuffer );
-        gl.bufferData(gl.ARRAY_BUFFER, flatten(model.getUvs()), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(model.getUvs()), gl.DYNAMIC_DRAW);
     }
 
     async renderNode(node, MV){
@@ -182,11 +182,11 @@ export default class Scene{
             //!THE ORDER MATTERS... WHY? (if we buffer the vertices first then the normals it doesn't work.. but why)
             //Buffer the normals
             this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.normalBuffer );
-            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*NORMAL_SIZE, node.object.normals);//node.object.normals, this.gl.STATIC_DRAW );
+            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*NORMAL_SIZE, node.object.normals);
 
             //Buffer the vertices
             this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.vertexBuffer );
-            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*VERTEX_SIZE, node.object.vertices);//node.object.vertices, this.gl.STATIC_DRAW );
+            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*VERTEX_SIZE, node.object.vertices);
 
         }
 
