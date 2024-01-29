@@ -1,5 +1,5 @@
     import GeometricObject from "./GeometricObject.js";
-    import {flatten, vec4, vec3, subtract, normalize, cross, negate, add} from "../Common/MV.js";
+    import {flatten, vec3, subtract, normalize, cross, negate, add} from "../Common/MV.js";
     import Mesh from "../DataStructure/Mesh.js";
     //import bump from "./BumpMapGenerator.JS" 
 

@@ -1,5 +1,5 @@
 import ParametricSurface from "../Library/Objects/ParametricSurface.js";
-import { vec4 } from "../Library/Common/MV.js";
+import { vec3 } from "../Library/Common/MV.js";
 
 export default class Torus extends ParametricSurface{
     //! r1 should not equal r2
@@ -17,7 +17,7 @@ export default class Torus extends ParametricSurface{
         let y = (this.r1 + this.r2*Math.cos(v)) * Math.sin(u);
         let z = this.r2 * Math.sin(v);
 
-        return vec4(x, y, z, 1);
+        return vec3(x, y, z);
     }
 
 }

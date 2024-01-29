@@ -13,7 +13,7 @@ import TexturedCube from "./Library/Objects/TexturedCube/TexturedCube.js";
 import Hemisphere from "./Library/Objects/Hemisphere.js";
 
 window.onload = () => {
-    breatherTest();
+    test();
 }
 
 function cubeTest(){

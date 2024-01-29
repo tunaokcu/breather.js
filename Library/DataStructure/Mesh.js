@@ -11,7 +11,7 @@ export default class Mesh{
                                 this.polygons[0][3] = calculateNormal(this.vertices[this.polygons[0][0]],this.vertices[this.polygons[0][1]],this.vertices[this.polygons[0][2]]) 
                             */
         this.vertices = []; //each element in the vertex array is a size 2 array containing 
-                                //1 vec4, the position of the vertex
+                                //1 vec3, the position of the vertex
                                 //1 vec3, the vertex normal calculated from every polygon this vertex is adjacent to
                             /*example assignment:
                                 this.vertices[0] = [object.parametricEquation(u,v), vec3(0,0,0)];

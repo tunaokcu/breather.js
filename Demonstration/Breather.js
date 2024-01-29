@@ -1,5 +1,5 @@
 import ParametricSurface from "../Library/Objects/ParametricSurface.js";
-import {vec4, cross, vec3} from "../Library/Common/MV.js";
+import {cross, vec3} from "../Library/Common/MV.js";
 
 export default class Breather extends ParametricSurface{
 
@@ -61,7 +61,7 @@ function breather(aa, u, v){
     let y = breatherY(aa, u, v, w, denom);
     let z = breatherZ(aa, u ,v, w, denom);
     
-    let res = vec4(x,y,z, 1.0);
+    let res = vec3(x,y,z);
     return res;
 }
 function breatherW(aa){

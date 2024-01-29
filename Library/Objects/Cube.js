@@ -1,6 +1,6 @@
 
 import GeometricObject from "./GeometricObject.js";
-import {flatten, subtract, cross, vec3, vec4} from "../Common/MV.js";
+import {flatten, subtract, cross, vec3} from "../Common/MV.js";
 
 export default class Cube extends GeometricObject{
     points;
@@ -24,14 +24,14 @@ export default class Cube extends GeometricObject{
     quad(a, b, c, d)
     {
         var vertices = [
-            vec4( -0.5, -0.5,  0.5, 1.0 ),
-            vec4( -0.5,  0.5,  0.5, 1.0 ),
-            vec4(  0.5,  0.5,  0.5, 1.0 ),
-            vec4(  0.5, -0.5,  0.5, 1.0 ),
-            vec4( -0.5, -0.5, -0.5, 1.0 ),
-            vec4( -0.5,  0.5, -0.5, 1.0 ),
-            vec4(  0.5,  0.5, -0.5, 1.0 ),
-            vec4(  0.5, -0.5, -0.5, 1.0 )
+            vec3( -0.5, -0.5,  0.5),
+            vec3( -0.5,  0.5,  0.5),
+            vec3(  0.5,  0.5,  0.5),
+            vec3(  0.5, -0.5,  0.5),
+            vec3( -0.5, -0.5, -0.5),
+            vec3( -0.5,  0.5, -0.5),
+            vec3(  0.5,  0.5, -0.5),
+            vec3(  0.5, -0.5, -0.5)
         ];
 
         var t1 = subtract(vertices[b], vertices[a]);

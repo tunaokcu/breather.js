@@ -10,7 +10,7 @@ const MAX_TRIANGLES = 61204;//61204 for a single breather surface
 const MAX_VERTICES =  MAX_TRIANGLES*3;
 const ELEMENT_SIZE = 4;
 const NORMAL_SIZE = 3*ELEMENT_SIZE;
-const VERTEX_SIZE = 4*ELEMENT_SIZE;
+const VERTEX_SIZE = 3*ELEMENT_SIZE;
 
 
 export default class Scene{
@@ -48,7 +48,7 @@ export default class Scene{
         this.gl.bufferData(this.gl.ARRAY_BUFFER, MAX_VERTICES*VERTEX_SIZE, this.gl.DYNAMIC_DRAW);
 
         this.vPosition = this.gl.getAttribLocation( this.program, "vPosition" );
-        this.gl.vertexAttribPointer( this.vPosition, 4, this.gl.FLOAT, false, 0, 0 );
+        this.gl.vertexAttribPointer( this.vPosition, 3, this.gl.FLOAT, false, 0, 0 );
         this.gl.enableVertexAttribArray( this.vPosition );
 
         this.normalBuffer = this.gl.createBuffer();
@@ -68,8 +68,7 @@ export default class Scene{
 
         this.root = new SceneNode(); //Placeholder
 
-        //TODO implement this and light nodes
-        this.currentCamera = this.camera;//new CameraNode(new Camera(this.gl, this.program, -10, 10, 6, 0, 0.0,  -30.0, 30.0, 30.0, -30.0, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0)))
+        this.currentCamera = this.camera;
 
         //Identity texture
         this.IDENTITY_TEXTURE = this.gl.createTexture();

@@ -1,6 +1,6 @@
 
 import GeometricObject from "./GeometricObject.js";
-import {flatten, subtract, cross, vec3, vec4} from "../Common/MV.js";
+import {flatten, subtract, cross, vec3} from "../Common/MV.js";
 
 export default class Plane extends GeometricObject{
     points;
@@ -26,10 +26,10 @@ export default class Plane extends GeometricObject{
     {
         let z = 0
         var vertices = [
-            vec4( -0.5, -0.5,  z, 1.0 ), //0 leftdown
-            vec4( -0.5,  0.5,  z, 1.0 ), //1 leftup
-            vec4(  0.5,  0.5,  z, 1.0 ), //2 rightup
-            vec4(  0.5, -0.5,  z, 1.0 ) //3 rightdown
+            vec3( -0.5, -0.5,  z ), //0 leftdown
+            vec3( -0.5,  0.5,  z ), //1 leftup
+            vec3(  0.5,  0.5,  z ), //2 rightup
+            vec3(  0.5, -0.5,  z ) //3 rightdown
         ];
 
         var t1 = subtract(vertices[b], vertices[a]);
