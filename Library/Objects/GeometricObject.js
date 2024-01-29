@@ -39,6 +39,8 @@ export default class GeometricObject{
 
         //To trigger the initial display
         this.hasBeenUpdated = true;
+
+        this.mode = "solid";
     }
 
     //No texture by default

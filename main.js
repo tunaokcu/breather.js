@@ -16,7 +16,13 @@ window.onload = () => {
     breatherTest();
 }
 
+function cubeTest(){
+    let scene = new Scene();
+    scene.root.nodes.push(new SceneNode(new Cube()));
 
+    scene.safeRender();
+    instantiateUI(scene);  
+}
 function test(){
     let breatherScene = new Scene();
 
@@ -43,9 +49,19 @@ function test(){
 }
 
 //Test functions
+function sphereTest(){
+    let scene = new Scene();
+    scene.root.nodes.push(new SceneNode(new Sphere()));
+
+    scene.normalType = "trueNormals"
+
+    scene.treeRenderMultiLevel();
+    instantiateUI(scene);  
+}
 function breatherTest(){
     let scene = new Scene();
     scene.root.nodes.push(new SceneNode(new Breather()));
+
     for(let i = 0; i < 2; i++){
         scene.zoomIn();
     }

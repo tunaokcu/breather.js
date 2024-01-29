@@ -6,6 +6,13 @@ import AggregateLight from "./AggregateLight.js";
 import Sphere from "../Objects/Sphere.js";
 import SceneNode from "../Objects/SceneNode.js";
 
+const MAX_TRIANGLES = 61204;//61204 for a single breather surface
+const MAX_VERTICES =  MAX_TRIANGLES*3;
+const ELEMENT_SIZE = 4;
+const NORMAL_SIZE = 3*ELEMENT_SIZE;
+const VERTEX_SIZE = 4*ELEMENT_SIZE;
+
+
 export default class Scene{
     canvas;
     gl;
@@ -37,9 +44,20 @@ export default class Scene{
         this.gl.enable(this.gl.DEPTH_TEST);
 
         this.vertexBuffer = this.gl.createBuffer();
-        this.normalBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, MAX_VERTICES*VERTEX_SIZE, this.gl.STATIC_DRAW);
+
         this.vPosition = this.gl.getAttribLocation( this.program, "vPosition" );
+        this.gl.vertexAttribPointer( this.vPosition, 4, this.gl.FLOAT, false, 0, 0 );
+        this.gl.enableVertexAttribArray( this.vPosition );
+
+        this.normalBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalBuffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, MAX_VERTICES*NORMAL_SIZE, this.gl.STATIC_DRAW);
+
         this.vNormal = this.gl.getAttribLocation( this.program, "vNormal" );
+        this.gl.vertexAttribPointer( this.vNormal, 3, this.gl.FLOAT, false, 0, 0 ); 
+        this.gl.enableVertexAttribArray( this.vNormal );
 
         this.camera = new Camera(this.gl, this.program, -10, 10, 6, 0, 0.0,  -30.0, 30.0, 30.0, -30.0, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))
         this.camera.setShaderMatrices(this.gl);
@@ -49,6 +67,7 @@ export default class Scene{
         this.renderStateChanged = true;
 
         this.root = new SceneNode(); //Placeholder
+
         //TODO implement this and light nodes
         this.currentCamera = this.camera;//new CameraNode(new Camera(this.gl, this.program, -10, 10, 6, 0, 0.0,  -30.0, 30.0, 30.0, -30.0, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0)))
 
@@ -86,12 +105,11 @@ export default class Scene{
         //Clear
         this.gl.clear( this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);    
 
-        //Enable 
-        this.gl.vertexAttribPointer( this.vPosition, 4, this.gl.FLOAT, false, 0, 0 );
-        this.gl.enableVertexAttribArray( this.vPosition );
-
         //Send camera
         this.currentCamera.setProjectionMatrix(this.gl);
+
+        //Set offset to zero before traversing
+        this.globalOffset = 0;
 
         //Traverse tree
         for (const childNode of this.root.nodes){
@@ -119,8 +137,6 @@ export default class Scene{
         let texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
-
-
         // Draw texture
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, model.texture);
 
@@ -134,8 +150,6 @@ export default class Scene{
 
         gl.bindBuffer( gl.ARRAY_BUFFER, this.uvBuffer );
         gl.bufferData(gl.ARRAY_BUFFER, flatten(model.getUvs()), gl.STATIC_DRAW);
-        gl.vertexAttribPointer( this.uvPosition, 2, gl.FLOAT, false, 0, 0 );
-        gl.enableVertexAttribArray( this.uvPosition );
     }
 
     async renderNode(node, MV){
@@ -158,37 +172,41 @@ export default class Scene{
         this.gl.uniformMatrix4fv( this.gl.getUniformLocation( this.program, "modelViewMatrix" ), false, flatten(MV) );
 
 
+
         //!EXPERIMENTAL
-        
         if (!node.object.meshIsUpToDate()){
             node.object.calculateEverythingAndStoreInMeshStructure();
+
+            node.object.numberOfVertices = node.object.normals.length / 3;
 
             //!THE ORDER MATTERS... WHY? (if we buffer the vertices first then the normals it doesn't work.. but why)
             //Buffer the normals
             this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.normalBuffer );
-            this.gl.bufferData( this.gl.ARRAY_BUFFER, node.object.normals, this.gl.STATIC_DRAW );
-            this.gl.enableVertexAttribArray( this.vNormal );
-            this.gl.vertexAttribPointer( this.vNormal, 3, this.gl.FLOAT, false, 0, 0 ); 
+            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*NORMAL_SIZE, node.object.normals);//node.object.normals, this.gl.STATIC_DRAW );
 
             //Buffer the vertices
             this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.vertexBuffer );
-            this.gl.bufferData( this.gl.ARRAY_BUFFER, node.object.vertices, this.gl.STATIC_DRAW );
-            this.gl.enableVertexAttribArray( this.vPosition );
-            this.gl.vertexAttribPointer( this.vPosition, 4, this.gl.FLOAT, false, 0, 0 );
+            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*VERTEX_SIZE, node.object.vertices);//node.object.vertices, this.gl.STATIC_DRAW );
+
         }
 
-
-
-
+        
         //Number of indices to render
-        let n = node.object.vertices.length / 4;
+        //183612  for default breather
+        //183612*
 
+        //This MIGHT actually be the number of triangles, not the number of vertices
+        let n = node.object.numberOfVertices;
       
         
         //Draw
         //Request frame here
-        //Not here.. if you do it here only one object will be drawn
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, n);
+        //Not here.. if you do it here only one object will be drawn for some reason
+        this.gl.drawArrays(this.gl.TRIANGLES, this.globalOffset, n);
+         
+
+        //Add to global offset
+        this.globalOffset += n;
         
     }
 
@@ -271,15 +289,13 @@ export default class Scene{
         if (this.renderState === "solid"){
             this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.normalBuffer );
             this.gl.bufferData( this.gl.ARRAY_BUFFER, flatten(this.normals), this.gl.STATIC_DRAW );
-            this.gl.vertexAttribPointer( this.vNormal, 3, this.gl.FLOAT, false, 0, 0 ); //!IMPORTANT BUG! normals were kept in vec3 format but sent 4 by 4 
-            this.gl.enableVertexAttribArray( this.vNormal );
+
         }
         let allVertices = [...flatten(this.vertices)].concat(...flatten(this.lightSphereVertices));
 
         this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.vertexBuffer );
         this.gl.bufferData( this.gl.ARRAY_BUFFER, flatten(allVertices), this.gl.STATIC_DRAW );
-        this.gl.vertexAttribPointer( this.vPosition, 4, this.gl.FLOAT, false, 0, 0 );
-        this.gl.enableVertexAttribArray( this.vPosition );
+
 
 
     }

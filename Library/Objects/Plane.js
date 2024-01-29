@@ -2,8 +2,7 @@
 import GeometricObject from "./GeometricObject.js";
 import {flatten, subtract, cross, vec3, vec4} from "../Common/MV.js";
 
-//Should extend GeometricObject or something of the sort(not high priority, not even relevant to the assignment)
-export default class Cube extends GeometricObject{
+export default class Plane extends GeometricObject{
     points;
     constructor(){
         super();
@@ -62,5 +61,13 @@ export default class Cube extends GeometricObject{
 
     getVertexNormals(){
         return this.normals;
+    }
+
+    calculateEverythingAndStoreInMeshStructure(){
+        this.vertices = flatten(this.points);
+        this.normals = flatten(this.normals);
+
+        //So that it isn't recalculated and buffered needlessly
+        this.hasBeenUpdated = false;
     }
 }
