@@ -41,6 +41,115 @@
         meshBasedVertices(){
             return this.mesh.verticesToBuffer
         }
+
+        //Indices are not good with more complex data apparently. Discard.
+        calculateAndStoreIndexBasedMesh(){
+            this.mesh = new Mesh();
+
+            let object = this;
+
+            let maxNum = 0;
+            let jMax = 0;
+            for (let u = object.uStart; u < object.uEnd; u += object.uDelta){
+
+                let j = 0;
+                for(let v = object.vStart; v < object.vEnd; v += object.vDelta){
+                    //In the first pass, specify vertices
+                    this.mesh.vertices.push([object.parametricFunction(u, v), vec3(0, 0, 0)]);
+
+                    j += 1;
+                    maxNum += 1;
+                }
+
+                jMax = j;
+            }
+
+            let i = 0;
+            for (let u = object.uStart; u < object.uEnd; u += object.uDelta){
+
+                let j = 0;
+                for(let v = object.vStart; v < object.vEnd; v += object.vDelta){
+
+
+                    //Get indices
+                    let a = (i * jMax + j )% maxNum;
+                    let b = ((i+1)*jMax + j) % maxNum;
+                    let c = (i * jMax + j + 1) % maxNum;
+                    
+                    //Get surface normal
+                    let surfaceNormal =  this.calculateNormal(this.mesh.vertices[a][0],this.mesh.vertices[b][0], this.mesh.vertices[c][0])
+
+                    //Add surface normal to each vertex normal
+                    this.mesh.vertices[a][1] = add(this.mesh.vertices[a][1], surfaceNormal)
+                    this.mesh.vertices[b][1] = add(this.mesh.vertices[b][1], surfaceNormal)
+                    this.mesh.vertices[c][1] = add(this.mesh.vertices[c][1], surfaceNormal)
+
+                    //Add polygon
+                    this.mesh.polygons.push([a, b, c, surfaceNormal])
+                
+
+
+                    //Get indices
+                    a = (i * jMax + j + 1) % maxNum;
+                    b = ((i+1)*jMax + j) % maxNum;
+                    c = ((i+1)*jMax + j + 1) % maxNum;
+                    
+                    //Get surface normal
+                    surfaceNormal =  this.calculateNormal(this.mesh.vertices[a][0],this.mesh.vertices[b][0], this.mesh.vertices[c][0])
+
+                    //Add surface normal to each vertex normal
+                    this.mesh.vertices[a][1] = add(this.mesh.vertices[a][1], surfaceNormal)
+                    this.mesh.vertices[b][1] = add(this.mesh.vertices[b][1], surfaceNormal)
+                    this.mesh.vertices[c][1] = add(this.mesh.vertices[c][1], surfaceNormal)
+
+                    //Add polygon
+                    this.mesh.polygons.push([a, b, c, surfaceNormal])
+
+                    j += 1;
+                }
+
+                i += 1
+            }
+
+            this.normals = this.mesh.getNormals();
+            this.vertices = this.mesh.getVertices();
+            this.indices = this.mesh.getIndices();
+        
+            /*
+            for (const polygon of this.mesh.polygons){
+                let [i1, i2, i3, disregard] = polygon
+
+                let v1, v2, v3;
+                let n1, n2, n3;
+                v1 = this.mesh.vertices[i1][0]
+                n1 = this.mesh.vertices[i1][1]
+
+                v2 = this.mesh.vertices[i2][0]
+                n2 = this.mesh.vertices[i2][1]
+
+                v3 = this.mesh.vertices[i3][0]
+                n3 = this.mesh.vertices[i3][1]
+
+                this.mesh.verticesToBuffer.push(v1);
+                this.mesh.verticesToBuffer.push(v2);
+                this.mesh.verticesToBuffer.push(v3);
+
+                this.mesh.normalsToBuffer.push(n1);
+                this.mesh.normalsToBuffer.push(n2);
+                this.mesh.normalsToBuffer.push(n3);
+
+            }*/
+
+            /*
+            console.log("With indices")
+            console.log(this.vertices);
+            console.log(this.normals);
+            console.log(this.vertices);
+            */
+            //So that it isn't recalculated and buffered needlessly
+            this.hasBeenUpdated = false;
+        }
+
         calculateEverythingAndStoreInMeshStructure(){
             this.mesh = new Mesh();
 
@@ -135,10 +244,11 @@
 
             }
 
+            this.vertices = flatten(this.mesh.verticesToBuffer);
+            this.normals = flatten(this.mesh.normalsToBuffer);
 
-
-            
-    
+            //So that it isn't recalculated and buffered needlessly
+            this.hasBeenUpdated = false;
         }
         //not working..
         experimentalVertexNormals(){

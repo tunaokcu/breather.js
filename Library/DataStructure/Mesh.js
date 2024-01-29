@@ -1,3 +1,4 @@
+import { flatten } from "../Common/MV.js";
 
 //We need a way to keep track of neighboring polygons, etc for normal stuff
 export default class Mesh{
@@ -30,5 +31,17 @@ export default class Mesh{
 
         this.verticesToBuffer = [];
         this.normalsToBuffer = [];
+    }
+
+    //Vertex normals
+    getNormals(){
+        return flatten(this.vertices.map((arr) => arr[1]))
+    }
+
+    getVertices(){
+        return flatten(this.vertices.map((arr) => arr[0]))
+    }
+    getIndices(){
+        return flatten(this.polygons.map((arr) => (arr[0], arr[1], arr[2])))
     }
 }

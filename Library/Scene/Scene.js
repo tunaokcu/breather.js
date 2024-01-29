@@ -18,7 +18,6 @@ export default class Scene{
 
     camera;
     lighting;
-    object;
 
     constructor(canvasId="gl-canvas", backgroundColor=[1.0, 1.0, 1.0, 1.0]){ this.init(canvasId, backgroundColor);}
 
@@ -42,7 +41,6 @@ export default class Scene{
         this.vPosition = this.gl.getAttribLocation( this.program, "vPosition" );
         this.vNormal = this.gl.getAttribLocation( this.program, "vNormal" );
 
-        this.object = null;
         this.camera = new Camera(this.gl, this.program, -10, 10, 6, 0, 0.0,  -30.0, 30.0, 30.0, -30.0, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))
         this.camera.setShaderMatrices(this.gl);
         this.lighting = new AggregateLight(this.gl, this.program);
@@ -55,25 +53,23 @@ export default class Scene{
         this.currentCamera = this.camera;//new CameraNode(new Camera(this.gl, this.program, -10, 10, 6, 0, 0.0,  -30.0, 30.0, 30.0, -30.0, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0)))
 
         //Identity texture
-        let gl = this.gl;
-        
-
-        this.IDENTITY_TEXTURE = gl.createTexture();
+        this.IDENTITY_TEXTURE = this.gl.createTexture();
         this.disableTextures(); //textures are disabled by default
 
         // Texture
         // here we create buffer and attribute pointer for texture coordinates
-        this.uvBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
+        this.uvBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.uvBuffer);
                 
         // a_texcoord is the name of the attribute inside vertex shader
-        this.uvPosition = gl.getAttribLocation(this.program, "a_texcoord");
+        this.uvPosition = this.gl.getAttribLocation(this.program, "a_texcoord");
 
         // each attribute is made of 2 floats
-        gl.vertexAttribPointer(this.uvPosition, 2, gl.FLOAT, false, 0, 0) ;
-        gl.enableVertexAttribArray(this.uvPosition); 
+        this.gl.vertexAttribPointer(this.uvPosition, 2, this.gl.FLOAT, false, 0, 0) ;
+        this.gl.enableVertexAttribArray(this.uvPosition); 
 
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+
     }
 
     WHITE = new Uint8Array([255, 255, 255, 255]);
@@ -101,6 +97,7 @@ export default class Scene{
         for (const childNode of this.root.nodes){
             this.treeTraversal(childNode, this.currentCamera.modelViewMatrix)
         }
+
     }
 
     treeTraversal(node, MV){
@@ -149,10 +146,10 @@ export default class Scene{
             else{
                 this.drawTexture(node.object);
             }
-        }/*
+        }
         else{
             this.disableTextures();
-        }*/
+        }
         
         //Send light values to GPU  
         this.lighting.sendLightValues(this.gl, node.object);
@@ -160,55 +157,106 @@ export default class Scene{
         //Send MV
         this.gl.uniformMatrix4fv( this.gl.getUniformLocation( this.program, "modelViewMatrix" ), false, flatten(MV) );
 
-        //Calculate the vertices and store them in the node
-        if (node.object.vertices == null || node.object.vertices == undefined){
-            node.object.vertices = node.object.getSolidVertices();
-        }
-
-        //Calculate the normals and store them in the node
-        if (node.object.normals == null || node.object.normals == undefined){
-            //TODO implement vertex/true normal toggling 
-            if (this.normalType == "vertexNormals"){
-                node.object.normals = node.object.getVertexNormals(); 
-            } 
-            else if (this.normalType == "trueNormals"){
-                node.object.normals = node.object.getTrueNormals();
-            }
-        }
 
         //!EXPERIMENTAL
-        /*
-        if (!node.object.meshIsCalculated()){
-            node.object.calculateEverythingAndStoreInMeshStructure();
-        }
-        node.object.normals = node.object.meshBasedNormals();
-        node.object.vertices = node.object.meshBasedVertices();
-        */
-
-        //!THE ORDER MATTERS... WHY? (if we buffer the vertices first then the normals it doesn't work)
-        //Buffer the normals
-        this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.normalBuffer );
-        this.gl.bufferData( this.gl.ARRAY_BUFFER, flatten(node.object.normals), this.gl.STATIC_DRAW );
-        this.gl.vertexAttribPointer( this.vNormal, 3, this.gl.FLOAT, false, 0, 0 );
-        this.gl.enableVertexAttribArray( this.vNormal );
-
-        //Buffer the vertices
-        this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.vertexBuffer );
-        this.gl.bufferData( this.gl.ARRAY_BUFFER, flatten(node.object.vertices), this.gl.STATIC_DRAW );
-        this.gl.vertexAttribPointer( this.vPosition, 4, this.gl.FLOAT, false, 0, 0 );
-        this.gl.enableVertexAttribArray( this.vPosition );
-    
-        let n = flatten(node.object.normals).length / 3;
-    
-        //Draw
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, n);
-
         
-        if (node.object.hasTexture()){
-            this.disableTextures();
-        } 
+        if (!node.object.meshIsUpToDate()){
+            node.object.calculateEverythingAndStoreInMeshStructure();
+
+            //!THE ORDER MATTERS... WHY? (if we buffer the vertices first then the normals it doesn't work.. but why)
+            //Buffer the normals
+            this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.normalBuffer );
+            this.gl.bufferData( this.gl.ARRAY_BUFFER, node.object.normals, this.gl.STATIC_DRAW );
+            this.gl.enableVertexAttribArray( this.vNormal );
+            this.gl.vertexAttribPointer( this.vNormal, 3, this.gl.FLOAT, false, 0, 0 ); 
+
+            //Buffer the vertices
+            this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.vertexBuffer );
+            this.gl.bufferData( this.gl.ARRAY_BUFFER, node.object.vertices, this.gl.STATIC_DRAW );
+            this.gl.enableVertexAttribArray( this.vPosition );
+            this.gl.vertexAttribPointer( this.vPosition, 4, this.gl.FLOAT, false, 0, 0 );
+        }
+
+
+
+
+        //Number of indices to render
+        let n = node.object.vertices.length / 4;
+
+      
+        
+        //Draw
+        //Request frame here
+        //Not here.. if you do it here only one object will be drawn
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, n);
+        
     }
 
+
+    
+
+    updatePointLightPosition(newPosition){
+        this.lighting.pointLight.setAndSendLightPosition(newPosition);
+        this.safeRender()
+    }
+
+
+    //Like this for now.
+    safeRender(){
+        this.treeRenderMultiLevel();
+    }
+
+    //No need to buffer vertex data, just render
+    adjustCameraAndRender(){
+        //? Is there even any advantage in updating matrices without setting them? If not why seperate these functions
+        this.camera.updateMatrices();
+        this.camera.setShaderMatrices(this.gl);
+
+        this.safeRender();
+    }
+
+
+    //Camera controls
+    zoomIn(){
+        this.camera.zoomIn(this.gl); 
+        this.safeRender()
+    }
+    zoomOut(){
+        this.camera.zoomOut(this.gl);
+        this.safeRender();
+    }
+
+    rotateCamera(angle){
+        this.camera.rotate(this.gl, angle);
+        this.safeRender();    
+    }
+
+    /*
+    updateTheta(newAngle){
+        this.camera.theta = newAngle;
+        this.adjustCameraAndRender();
+    }
+    updatePhi(newAngle){
+        this.camera.phi = newAngle;
+        this.adjustCameraAndRender();
+    }
+    */
+    //Light position change
+    incrementLightLocation(x, y, z){
+        this.lighting.pointLight.incrementLightLocation(this.gl, x, y, z);
+        if (this.renderState === "solid"){
+            this.safeRender();
+        }
+    }
+
+    /*//! Planning:
+        Imagine if we switched to vertex/index arrays and gl.drawElements
+
+        To draw points we just need to buffer vertices(already buffered) and use gl.POINTS -> issue: each point will be drawn 4 times... this might be an issue(probably only in terms of performance)
+        To draw a wireframe(rename mesh with wireframe, it's confusing) we need to change what we are buffering though
+
+    */
+    //Old code
 
     calculateAndBuffer(){
         switch(this.renderState){
@@ -264,7 +312,6 @@ export default class Scene{
     calculateVertexNormals(){
         this.normals =  this.object.getVertexNormals(); 
     }
-
     render(){
         this.gl.clear( this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);    
 
@@ -277,10 +324,9 @@ export default class Scene{
         //Experimental
         this.showLight();
     }
-    
+
     lightSphere = new Sphere(0, 2*Math.PI, 30*Math.PI/360, 0, 2*Math.PI, 30*Math.PI/360, 0.1);
     lightSphereVertices = this.lightSphere.getSolidVertices();
-
     showLight(){
         /*
         this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.normalBuffer );
@@ -311,41 +357,9 @@ export default class Scene{
 
         //Fix mv 
     }
-    
+    /*
 
-    updatePointLightPosition(newPosition){
-        this.lighting.pointLight.setAndSendLightPosition(newPosition);
-        this.treeRenderMultiLevel();
-    }
-
-
-    //No need to buffer vertex data, just render
-    adjustCameraAndRender(){
-        //? Is there even any advantage in updating matrices without setting them? If not why seperate these functions
-        this.camera.updateMatrices();
-        this.camera.setShaderMatrices(this.gl);
-
-        this.treeRenderMultiLevel();
-    }
-
-    zoomIn(){
-        this.camera.zoomIn();
-        this.adjustCameraAndRender();
-    }
-    zoomOut(){
-        this.camera.zoomOut();
-        this.adjustCameraAndRender();
-    }
-
-    updateTheta(newAngle){
-        this.camera.theta = newAngle;
-        this.adjustCameraAndRender();
-    }
-    updatePhi(newAngle){
-        this.camera.phi = newAngle;
-        this.adjustCameraAndRender();
-    }
-    
+        
     updateRenderState(renderState){
         if (this.renderState != renderState){
             this.renderState = renderState;
@@ -367,13 +381,6 @@ export default class Scene{
         }   
      }
     
-    incrementLightLocation(x, y, z){
-        this.lighting.pointLight.incrementLightLocation(this.gl, x, y, z);
-        if (this.renderState === "solid"){
-            this.treeRenderMultiLevel();
-        }
-    }
-
     toggleTrueNormals(){
         if(this.normalType = "vertexNormals"){
             this.normalType = "trueNormals";
@@ -385,7 +392,7 @@ export default class Scene{
             this.renderUnconditional();
         }   
     }
-
+    */
     /*
     calculateMesh(){
         this.vertices =  this.object.getMeshVertices();
@@ -396,9 +403,9 @@ export default class Scene{
 
 function imageIsPowerOfTwo(image){
     return isPowerOf2(image.width) && isPowerOf2(image.height)
-   }
+}
    
-   //Source: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL
-   function isPowerOf2(value) {
-       return (value & (value - 1)) === 0;
-     }
+//Source: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL
+function isPowerOf2(value) {
+    return (value & (value - 1)) === 0;
+    }

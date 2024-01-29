@@ -305,7 +305,7 @@ export function mult( u, v )
     }
     else {
         if ( u.length != v.length ) {
-            throw "mult(): vectors are not the same dimension";
+            throw "mult(): vectors are not the same dimension " + u + " " + v;
         }
 
         for ( var i = 0; i < u.length; ++i ) {

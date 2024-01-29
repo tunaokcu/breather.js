@@ -13,45 +13,9 @@ import TexturedCube from "./Library/Objects/TexturedCube/TexturedCube.js";
 import Hemisphere from "./Library/Objects/Hemisphere.js";
 
 window.onload = () => {
-    test();
+    breatherTest();
 }
 
-//Test functions
-function breatherTest(){
-    let scene = new Scene();
-    scene.root.nodes.push(new SceneNode(new Sphere()));
-    scene.normalType = "trueNormals"
-    scene.treeRenderMultiLevel();
-    instantiateUI(scene);
-}
-function textureTest(){
-    let scene = new Scene();
-    scene.root.nodes.push(new SceneNode(new TexturedCube("/Library/Objects/TexturedCube/steve-head.png")));
-    scene.treeRenderMultiLevel();
-    instantiateUI(scene);  
-}
-
-function trueNormalTest(){
-    let scene = new Scene();
-    scene.root.nodes.push(new SceneNode(new Breather()));
-    scene.normalType = "trueNormals";
-    scene.treeRenderMultiLevel();
-    instantiateUI(scene);  
-}
-
-function lightingTest(){
-    let scene = new Scene();
-    scene.root.nodes.push(new SceneNode(new Cube()));
-    scene.treeRenderMultiLevel();
-    instantiateUI(scene);
-}
-
-function hemisphereTest(){
-    let scene = new Scene();
-    scene.root.nodes.push(new SceneNode(new Hemisphere()));
-    scene.treeRenderMultiLevel();
-    instantiateUI(scene);
-}
 
 function test(){
     let breatherScene = new Scene();
@@ -70,13 +34,52 @@ function test(){
 
     breatherScene.root.nodes.push(planeNode);
     breatherScene.root.nodes.push(sphereNode);
-    breatherScene.root.nodes.push(new Octopus());
+   // breatherScene.root.nodes.push(new Octopus());
 
     instantiateCharacterControls(breatherScene, steve);
 
-    breatherScene.treeRenderMultiLevel();
+    breatherScene.safeRender();
     instantiateUI(breatherScene);
 }
+
+//Test functions
+function breatherTest(){
+    let scene = new Scene();
+    scene.root.nodes.push(new SceneNode(new Breather()));
+    for(let i = 0; i < 2; i++){
+        scene.zoomIn();
+    }
+    scene.normalType = "trueNormals"
+
+    scene.treeRenderMultiLevel();
+    instantiateUI(scene);
+}
+function textureTest(){
+    let scene = new Scene();
+    scene.root.nodes.push(new SceneNode(new TexturedCube("/Library/Objects/TexturedCube/steve-head.png")));
+    scene.treeRenderMultiLevel();
+    instantiateUI(scene);  
+}
+function trueNormalTest(){
+    let scene = new Scene();
+    scene.root.nodes.push(new SceneNode(new Breather()));
+    scene.normalType = "trueNormals";
+    scene.treeRenderMultiLevel();
+    instantiateUI(scene);  
+}
+function lightingTest(){
+    let scene = new Scene();
+    scene.root.nodes.push(new SceneNode(new Cube()));
+    scene.treeRenderMultiLevel();
+    instantiateUI(scene);
+}
+function hemisphereTest(){
+    let scene = new Scene();
+    scene.root.nodes.push(new SceneNode(new Hemisphere()));
+    scene.treeRenderMultiLevel();
+    instantiateUI(scene);
+}
+
 
 
 //Below are UI functions
@@ -92,10 +95,7 @@ function instantiateSidebar(scene){
 
 
 
-function instantiateCameraSliders(scene){
-    document.getElementById("x").addEventListener("input", (event) => xAxisSliderHandler(scene, parseInt(event.target.value)))
-    document.getElementById("y").addEventListener("input", (event) => yAxisSliderHandler(scene, parseInt(event.target.value)))    
-}
+
 
 function instantiateRenderButtons(scene){
     document.getElementById("mesh").addEventListener("click", () => scene.updateRenderState("mesh"));
@@ -108,12 +108,38 @@ function degreesToRadians(degrees){
     return degrees * (Math.PI / 180.0);
 }
 
+let lastX, lastY, lastZ;
+function instantiateCameraSliders(scene){
+    let xElem = document.getElementById("x");
+    let yElem = document.getElementById("y");
+    let zElem = document.getElementById("z");
+
+    lastX = parseInt(xElem.value);
+    lastY = parseInt(yElem.value);
+    lastZ = parseInt(zElem.value);
+
+    xElem.addEventListener("input", (event) => xAxisSliderHandler(scene, parseInt(event.target.value)))
+    yElem.addEventListener("input", (event) => yAxisSliderHandler(scene, parseInt(event.target.value)))    
+    zElem.addEventListener("input", (event) => zAxisSliderHandler(scene, parseInt(event.target.value)))    
+}
 
 function xAxisSliderHandler(scene, newAngleInDegrees){
-    scene.updateTheta(degreesToRadians(newAngleInDegrees));
+    let rot = newAngleInDegrees - lastX;
+    lastX = newAngleInDegrees;
+
+    scene.rotateCamera([rot, 0, 0]);
 }
 function yAxisSliderHandler(scene, newAngleInDegrees){
-    scene.updatePhi(degreesToRadians(newAngleInDegrees));
+    let rot = newAngleInDegrees - lastY;
+    lastY = newAngleInDegrees;
+
+    scene.rotateCamera([0, rot, 0]);
+}
+function zAxisSliderHandler(scene, newAngleInDegrees){
+    let rot = newAngleInDegrees - lastZ;
+    lastZ = newAngleInDegrees;
+
+    scene.rotateCamera([0, 0, rot]);
 }
 
 function instantiateZoomHandler(scene){

@@ -1,4 +1,4 @@
-import {flatten, vec3, lookAt, ortho} from "../Common/MV.js";
+import {flatten, vec3, lookAt, ortho, mult, rotate} from "../Common/MV.js";
 
 //!THIS IS ORTHOGRAPHIC
 export default class Camera{
@@ -51,16 +51,33 @@ export default class Camera{
     }
 
     #ZOOM_FACTOR = 2;
-    zoomIn(){
+    zoomIn(gl){
         this.left /= this.#ZOOM_FACTOR;
         this.right /= this.#ZOOM_FACTOR;
         this.ytop /= this.#ZOOM_FACTOR;
         this.bottom /= this.#ZOOM_FACTOR;
+
+        this.projectionMatrix = ortho( this.left, this.right, this.bottom, this.ytop, this.near, this.far );
+        gl.uniformMatrix4fv( this.projectionMatrixLoc, false, flatten(this.projectionMatrix) );
     }
-    zoomOut(){
+    zoomOut(gl){
         this.left *= this.#ZOOM_FACTOR;
         this.right *= this.#ZOOM_FACTOR;
         this.ytop *= this.#ZOOM_FACTOR;
         this.bottom *= this.#ZOOM_FACTOR;
+
+        this.projectionMatrix = ortho( this.left, this.right, this.bottom, this.ytop, this.near, this.far );
+        gl.uniformMatrix4fv( this.projectionMatrixLoc, false, flatten(this.projectionMatrix) );
     }
+
+    //Angles should be in degrees, not radians.
+    rotate(gl, rotateBy){
+        //Rotate
+        this.modelViewMatrix = mult(this.modelViewMatrix, rotate(rotateBy[0], 1, 0, 0));
+        this.modelViewMatrix = mult(this.modelViewMatrix, rotate(rotateBy[1], 0, 1, 0));
+        this.modelViewMatrix = mult(this.modelViewMatrix, rotate(rotateBy[2], 0, 0, 1));
+
+        gl.uniformMatrix4fv( this.modelViewMatrixLoc, false, flatten(this.modelViewMatrix) );
+    }
+
 }

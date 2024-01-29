@@ -35,11 +35,18 @@ export default class GeometricObject{
         //TODO a potential are of improvement is to also add a Texture object. This is probably pretty much required for our assignment anyways.
         //TODO, setColor, etc
         //this.texture = new Texture();
-        self.bumpMappingOn = false;
+        this.bumpMappingOn = false;
+
+        //To trigger the initial display
+        this.hasBeenUpdated = true;
     }
 
     //No texture by default
     hasTexture(){
         return false;    
+    }
+
+    meshIsUpToDate(){
+        return !this.hasBeenUpdated;
     }
 }
