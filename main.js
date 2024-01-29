@@ -25,6 +25,7 @@ function cubeTest(){
 }
 function test(){
     let breatherScene = new Scene();
+    breatherScene.normalType = "trueNormals";
 
     let planeNode = new SceneNode(new Plane());
     planeNode.scaleBy = [10, 10, 10];

@@ -177,8 +177,7 @@ export default class Scene{
             node.object.calculateEverythingAndStoreInMeshStructure();
 
             node.object.numberOfVertices = node.object.normals.length / 3;
-
-            //!THE ORDER MATTERS... WHY? (if we buffer the vertices first then the normals it doesn't work.. but why)
+            
             //Buffer the normals
             this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.normalBuffer );
             this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*NORMAL_SIZE, node.object.normals);
