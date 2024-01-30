@@ -121,7 +121,7 @@ let back =  rotateClockwise(rotateClockwise([
 ]))
 
 
-var uvs = [
+var uvs = flatten([
     //face
     ...face,
 
@@ -140,7 +140,7 @@ var uvs = [
     //left
     ...left
 
-]
+])
 
 
 export default class TexturedCube extends Cube{
@@ -153,7 +153,7 @@ export default class TexturedCube extends Cube{
     hasTexture(){ return true; }
     textureIsLoaded(){ return this.loaded; }
     getUvs(){ 
-        return flatten(uvs); 
+        return uvs; 
     }
     async loadTexture(){
         var image = new Image();

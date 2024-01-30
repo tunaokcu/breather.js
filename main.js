@@ -13,7 +13,7 @@ import TexturedCube from "./Library/Objects/TexturedCube/TexturedCube.js";
 import Hemisphere from "./Library/Objects/Hemisphere.js";
 
 window.onload = () => {
-    breatherTest();
+    test();
 }
 
 function cubeTest(){
@@ -41,7 +41,7 @@ function test(){
 
     breatherScene.root.nodes.push(planeNode);
     breatherScene.root.nodes.push(sphereNode);
-   // breatherScene.root.nodes.push(new Octopus());
+    //breatherScene.root.nodes.push(new Octopus());
 
     instantiateCharacterControls(breatherScene, steve);
 

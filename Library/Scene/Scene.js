@@ -100,7 +100,7 @@ export default class Scene{
     }
 
     WHITE = new Uint8Array([255, 255, 255, 255]);
-    //Disable by sending the identity texture
+    //Disable by sending WHITE
     disableTexture(){
         let gl = this.gl;
 
@@ -108,8 +108,7 @@ export default class Scene{
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, this.WHITE);
     }
 
-    //TODO rename these complicated function names
-    treeRenderMultiLevel(){
+    renderScene(){
         //Clear
         this.gl.clear( this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);    
 
@@ -118,27 +117,26 @@ export default class Scene{
 
         //Traverse tree
         for (const childNode of this.root.nodes){
-            this.treeTraversal(childNode, this.currentCamera.modelViewMatrix)
+            this.traverseTreeAndRender(childNode, this.currentCamera.modelViewMatrix)
         }
     }
 
-    treeTraversal(node, MV){
+    traverseTreeAndRender(node, MV){
         if (node != null || node != undefined){
             //Draw only if the node has an object. Nodes can also just be containers for other nodes.
             if (node.object != null || node.object != undefined){ this.renderNode(node, node.getInstanceMatrix(MV));}
             
             for (const childNode of node.nodes){                
-                this.treeTraversal(childNode, node.getModelViewMatrix(MV))
+                this.traverseTreeAndRender(childNode, node.getModelViewMatrix(MV))
             }
         }
     }
 
-    //TODO review
     drawTexture(model){
         let gl = this.gl;
         
-        // create and bind texture
-        gl.bindTexture(gl.TEXTURE_2D, placeholderTexture);
+        // Bind texture
+        gl.bindTexture(gl.TEXTURE_2D, this.placeholderTexture);
 
         // Draw texture
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, model.texture);
@@ -153,7 +151,7 @@ export default class Scene{
         }
 
         gl.bindBuffer( gl.ARRAY_BUFFER, this.uvBuffer );
-        gl.bufferData(gl.ARRAY_BUFFER, flatten(model.getUvs()), gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, model.getUvs(), gl.DYNAMIC_DRAW);
     }
 
     //TODO fix
@@ -166,10 +164,7 @@ export default class Scene{
                 this.drawTexture(node.object);
             }
         }
-        else{
-            //TODO delete this else, disable texture again at the end of the function(if objec thas texture)
-            this.disableTexture();
-        }
+
         
         //Send light values to GPU  
         this.lighting.sendLightValues(this.gl, node.object);
@@ -178,13 +173,10 @@ export default class Scene{
         this.gl.uniformMatrix4fv( this.gl.getUniformLocation( this.program, "modelViewMatrix" ), false, flatten(MV) );
 
 
-        //!EXPERIMENTAL
         //When to rebuffer? When mesh is either 1) Not calculated yet 2) Calculated but not buffered(maybe we ran out of space) 3) Mesh parameters have been changed
-
         if (node.object.meshUpdated || node.object.meshNotCalculated){
             node.object.calculateMesh();
         }
-
         if (node.object.meshNotBuffered){
             let normals, vertices;
 
@@ -213,21 +205,22 @@ export default class Scene{
         //TODO ascertain
         //This MIGHT actually be the number of triangles, not the number of vertices
         let n = node.object.numberOfVertices;
-      
-        
+              
         //Draw
         //Request frame here
         //Not here.. if you do it here only one object will be drawn for some reason
         //TODO figure out where.. we have to do it somewhere right?
         this.gl.drawArrays(this.gl.TRIANGLES, this.globalOffset, n);
-         
-
+        
         //Add to global offset
         this.globalOffset += n;
+
+        //Disable texture for the next object
+        if (node.object.hasTexture()){
+            this.disableTexture();
+        }
     }
 
-
-    
 
     updatePointLightPosition(newPosition){
         this.lighting.pointLight.setAndSendLightPosition(newPosition);
@@ -237,7 +230,7 @@ export default class Scene{
 
     //This function is like this for now.
     safeRender(){
-        this.treeRenderMultiLevel();
+        this.renderScene();
     }
 
     //Camera controls

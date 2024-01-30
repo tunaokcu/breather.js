@@ -51,8 +51,6 @@ export default class Cube extends GeometricObject{
         this.normals.push(normal); 
         this.points.push(vertices[d]); 
         this.normals.push(normal);   
-
-        this.meshNotCalculated = false;
     }
 
     getSolidVertices(){
@@ -60,9 +58,12 @@ export default class Cube extends GeometricObject{
     }
     //TODO should be lines not points
     getVertices(){
-        return this.points;
+        return flatten(this.points);
     }
 
+    getTrueNormals(){
+        return flatten(this.normals);
+    }
     getVertexNormals(){
         return flatten(this.normals);
     }
@@ -71,9 +72,11 @@ export default class Cube extends GeometricObject{
         return flatten(this.normals);
     }
 
-    calculateEverythingAndStoreInMeshStructure(){
+    calculateMesh(){
         this.vertices = flatten(this.points);
         this.normals = flatten(this.normals);
+
+        this.numberOfVertices = this.normals.length / 3;
 
         //So that it isn't recalculated and buffered needlessly
         this.hasBeenUpdated = false;

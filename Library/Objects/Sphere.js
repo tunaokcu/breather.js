@@ -10,7 +10,7 @@ export default class Sphere extends ParametricSurface{
     //(u, v) => (x, y, z)
     parametricFunction(u, v){
         let r = this.r;
-        return vec3(r*Math.sin(u)*Math.cos(v), r*Math.sin(u)*Math.sin(v), r*Math.cos(u)); //!!!!!!!!! SPHERE DID NOT HAVE 1 BEFORE.. WAS THIS THE CAUSE OF THE BUG?
+        return vec3(r*Math.sin(u)*Math.cos(v), r*Math.sin(u)*Math.sin(v), r*Math.cos(u)); 
     }
 
     normalFunction(u, v){
