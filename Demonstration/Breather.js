@@ -17,7 +17,7 @@ export default class Breather extends ParametricSurface{
         return breather(this.aa, u, v);
     }
 
-    trueNormals(u, v){
+    normalFunction(u, v){
         let res = normals(this.aa, u, v, breatherW(this.aa));
 
         return res

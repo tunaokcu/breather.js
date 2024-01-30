@@ -29,8 +29,7 @@ export default class Scene{
     constructor(canvasId="gl-canvas", backgroundColor=[1.0, 1.0, 1.0, 1.0]){ this.init(canvasId, backgroundColor);}
 
     init(canvasId, backgroundColor){
-        this.normalType = "vertexNormals";
-
+        //Setup
         this.canvas = document.getElementById(canvasId);
         this.gl = WebGLUtils.setupWebGL( this.canvas );    
         if ( !this.gl ) { alert( "WebGL isn't available" ); }           
@@ -41,8 +40,7 @@ export default class Scene{
         this.program = initShaders( this.gl, "vertex-shader", "fragment-shader" );
         this.gl.useProgram( this.program );   
     
-        this.gl.enable(this.gl.DEPTH_TEST);
-
+        //Create and initialize vertex and normal bufferS
         this.vertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, MAX_VERTICES*VERTEX_SIZE, this.gl.DYNAMIC_DRAW);
@@ -59,53 +57,61 @@ export default class Scene{
         this.gl.vertexAttribPointer( this.vNormal, 3, this.gl.FLOAT, false, 0, 0 ); 
         this.gl.enableVertexAttribArray( this.vNormal );
 
+        //Create and send projection matrix
+        /*The model view matrix of the camera will be multiplied with that of each object before being sent, so only the projection matrix is
+        sent in setup*/
         this.camera = new Camera(this.gl, this.program, -10, 10, 6, 0, 0.0,  -30.0, 30.0, 30.0, -30.0, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))
-        this.camera.setShaderMatrices(this.gl);
-        this.lighting = new AggregateLight(this.gl, this.program);
+        this.camera.setProjectionMatrix(this.gl);
 
-        this.renderState = "solid";
-        this.renderStateChanged = true;
-
-        this.root = new SceneNode(); //Placeholder
-
+        //Set current camera
+        //!NOTE: as of now there is no support for multiple cameras to switch to and from. But this feature is planned.
         this.currentCamera = this.camera;
 
-        //Identity texture
-        this.IDENTITY_TEXTURE = this.gl.createTexture();
-        this.disableTextures(); //textures are disabled by default
+        //Create lighting. Do not send anything yet, since lighting will be applied per object according to the object's material
+        this.lighting = new AggregateLight(this.gl, this.program);
 
-        // Texture
-        // here we create buffer and attribute pointer for texture coordinates
+        //Enable depth test
+        this.gl.enable(this.gl.DEPTH_TEST);
+        
+        //Set renderState and normalType.
+        //!NOTE: changing render state and normal type is not supported as of yet. Only true normals are avaialble. Vertex normals are problematic right now. 
+        this.renderState = "solid";
+        this.normalType = "trueNormals";
+
+        //Create scene root
+        this.root = new SceneNode(); 
+
+        //Create placeholder texture 
+        this.placeholderTexture = this.gl.createTexture();
+
+        //Disable texture
+        this.disableTexture(); 
+
+        //Texture buffers
         this.uvBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.uvBuffer);
-                
-        // a_texcoord is the name of the attribute inside vertex shader
-        this.uvPosition = this.gl.getAttribLocation(this.program, "a_texcoord");
 
-        // each attribute is made of 2 floats
+        this.uvPosition = this.gl.getAttribLocation(this.program, "a_texcoord");
         this.gl.vertexAttribPointer(this.uvPosition, 2, this.gl.FLOAT, false, 0, 0) ;
         this.gl.enableVertexAttribArray(this.uvPosition); 
 
+        //Texture settings(this makes it so that the texture is not flipped upside down)
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
-
     }
 
     WHITE = new Uint8Array([255, 255, 255, 255]);
     //Disable by sending the identity texture
-    disableTextures(){
+    disableTexture(){
         let gl = this.gl;
 
-    
-        gl.bindTexture(gl.TEXTURE_2D, this.IDENTITY_TEXTURE);
+        gl.bindTexture(gl.TEXTURE_2D, this.placeholderTexture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, this.WHITE);
     }
 
+    //TODO rename these complicated function names
     treeRenderMultiLevel(){
         //Clear
         this.gl.clear( this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);    
-
-        //Send camera
-        this.currentCamera.setProjectionMatrix(this.gl);
 
         //Set offset to zero before traversing
         this.globalOffset = 0;
@@ -114,7 +120,6 @@ export default class Scene{
         for (const childNode of this.root.nodes){
             this.treeTraversal(childNode, this.currentCamera.modelViewMatrix)
         }
-
     }
 
     treeTraversal(node, MV){
@@ -128,19 +133,19 @@ export default class Scene{
         }
     }
 
-
+    //TODO review
     drawTexture(model){
         let gl = this.gl;
         
         // create and bind texture
-        let texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.bindTexture(gl.TEXTURE_2D, placeholderTexture);
 
         // Draw texture
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, model.texture);
 
         if (imageIsPowerOfTwo(model.texture)){
             gl.generateMipmap(gl.TEXTURE_2D);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         } else{
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -151,6 +156,7 @@ export default class Scene{
         gl.bufferData(gl.ARRAY_BUFFER, flatten(model.getUvs()), gl.DYNAMIC_DRAW);
     }
 
+    //TODO fix
     async renderNode(node, MV){
         if (node.object.hasTexture()){
             if (!node.object.textureIsLoaded()){
@@ -161,7 +167,8 @@ export default class Scene{
             }
         }
         else{
-            this.disableTextures();
+            //TODO delete this else, disable texture again at the end of the function(if objec thas texture)
+            this.disableTexture();
         }
         
         //Send light values to GPU  
@@ -171,28 +178,39 @@ export default class Scene{
         this.gl.uniformMatrix4fv( this.gl.getUniformLocation( this.program, "modelViewMatrix" ), false, flatten(MV) );
 
 
-
         //!EXPERIMENTAL
-        if (!node.object.meshIsUpToDate()){
-            node.object.calculateEverythingAndStoreInMeshStructure();
+        //When to rebuffer? When mesh is either 1) Not calculated yet 2) Calculated but not buffered(maybe we ran out of space) 3) Mesh parameters have been changed
 
-            node.object.numberOfVertices = node.object.normals.length / 3;
+        if (node.object.meshUpdated || node.object.meshNotCalculated){
+            node.object.calculateMesh();
+        }
+
+        if (node.object.meshNotBuffered){
+            let normals, vertices;
+
             
+            //Only one case for now
+            switch(this.normalType){
+                case "trueNormals": 
+                    normals = node.object.getTrueNormals();
+                    break;
+            }
+
+            vertices = node.object.getVertices();
+
             //Buffer the normals
             this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.normalBuffer );
-            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*NORMAL_SIZE, node.object.normals);
+            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*NORMAL_SIZE, normals);
 
             //Buffer the vertices
             this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.vertexBuffer );
-            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*VERTEX_SIZE, node.object.vertices);
+            this.gl.bufferSubData( this.gl.ARRAY_BUFFER, this.globalOffset*VERTEX_SIZE, vertices);
 
+    
         }
 
         
-        //Number of indices to render
-        //183612  for default breather
-        //183612*
-
+        //TODO ascertain
         //This MIGHT actually be the number of triangles, not the number of vertices
         let n = node.object.numberOfVertices;
       
@@ -200,12 +218,12 @@ export default class Scene{
         //Draw
         //Request frame here
         //Not here.. if you do it here only one object will be drawn for some reason
+        //TODO figure out where.. we have to do it somewhere right?
         this.gl.drawArrays(this.gl.TRIANGLES, this.globalOffset, n);
          
 
         //Add to global offset
         this.globalOffset += n;
-        
     }
 
 
@@ -217,46 +235,27 @@ export default class Scene{
     }
 
 
-    //Like this for now.
+    //This function is like this for now.
     safeRender(){
         this.treeRenderMultiLevel();
     }
 
-    //No need to buffer vertex data, just render
-    adjustCameraAndRender(){
-        //? Is there even any advantage in updating matrices without setting them? If not why seperate these functions
-        this.camera.updateMatrices();
-        this.camera.setShaderMatrices(this.gl);
-
-        this.safeRender();
-    }
-
-
     //Camera controls
     zoomIn(){
-        this.camera.zoomIn(this.gl); 
+        this.currentCamera.zoomIn(this.gl); 
         this.safeRender()
     }
     zoomOut(){
-        this.camera.zoomOut(this.gl);
+        this.currentCamera.zoomOut(this.gl);
         this.safeRender();
     }
 
     rotateCamera(angle){
-        this.camera.rotate(this.gl, angle);
+        this.currentCamera.rotate(this.gl, angle);
         this.safeRender();    
     }
 
-    /*
-    updateTheta(newAngle){
-        this.camera.theta = newAngle;
-        this.adjustCameraAndRender();
-    }
-    updatePhi(newAngle){
-        this.camera.phi = newAngle;
-        this.adjustCameraAndRender();
-    }
-    */
+
     //Light position change
     incrementLightLocation(x, y, z){
         this.lighting.pointLight.incrementLightLocation(this.gl, x, y, z);
@@ -339,8 +338,8 @@ export default class Scene{
         this.showLight();
     }
 
-    lightSphere = new Sphere(0, 2*Math.PI, 30*Math.PI/360, 0, 2*Math.PI, 30*Math.PI/360, 0.1);
-    lightSphereVertices = this.lightSphere.getSolidVertices();
+    //lightSphere = new Sphere(0, 2*Math.PI, 30*Math.PI/360, 0, 2*Math.PI, 30*Math.PI/360, 0.1);
+    //lightSphereVertices = this.lightSphere.getSolidVertices();
     showLight(){
         /*
         this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.normalBuffer );
@@ -357,7 +356,7 @@ export default class Scene{
         */
         //Translate sphere by light location
         let lightPosition = this.lighting.pointLight.lightPosition;
-        let mv = this.camera.modelViewMatrix; 
+        let mv = this.currentCamera.modelViewMatrix; 
         let translation = translate(lightPosition[0], lightPosition[1], lightPosition[2]);
         let mvFinal = mult(mv, translation);
 

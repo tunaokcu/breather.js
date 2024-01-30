@@ -12,7 +12,7 @@ export default class Torus extends ParametricSurface{
         this.material.setLimeGreen()
     }
 
-    parametricFunction(u, v){
+    normalFunction(u, v){
         let x = (this.r1 + this.r2*Math.cos(v)) * Math.cos(u);
         let y = (this.r1 + this.r2*Math.cos(v)) * Math.sin(u);
         let z = this.r2 * Math.sin(v);

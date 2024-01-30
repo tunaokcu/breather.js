@@ -32,14 +32,11 @@ export default class GeometricObject{
         
         //3rd
         this.material = new Material();
-        //TODO a potential are of improvement is to also add a Texture object. This is probably pretty much required for our assignment anyways.
-        //TODO, setColor, etc
-        //this.texture = new Texture();
-        this.bumpMappingOn = false;
 
-        //To trigger the initial display
-        this.hasBeenUpdated = true;
-
+        this.meshUpdated = false;
+        this.meshNotCalculated = true;
+        this.meshNotBuffered = true;
+        
         this.mode = "solid";
     }
 

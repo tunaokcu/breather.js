@@ -13,7 +13,7 @@ import TexturedCube from "./Library/Objects/TexturedCube/TexturedCube.js";
 import Hemisphere from "./Library/Objects/Hemisphere.js";
 
 window.onload = () => {
-    test();
+    breatherTest();
 }
 
 function cubeTest(){
@@ -62,11 +62,11 @@ function sphereTest(){
 function breatherTest(){
     let scene = new Scene();
     scene.root.nodes.push(new SceneNode(new Breather()));
+    scene.normalType = "trueNormals"
 
     for(let i = 0; i < 2; i++){
         scene.zoomIn();
     }
-    scene.normalType = "trueNormals"
 
     scene.treeRenderMultiLevel();
     instantiateUI(scene);

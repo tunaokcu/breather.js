@@ -13,7 +13,7 @@ export default class Sphere extends ParametricSurface{
         return vec3(r*Math.sin(u)*Math.cos(v), r*Math.sin(u)*Math.sin(v), r*Math.cos(u)); //!!!!!!!!! SPHERE DID NOT HAVE 1 BEFORE.. WAS THIS THE CAUSE OF THE BUG?
     }
 
-    trueNormals(u, v){
+    normalFunction(u, v){
         return this.parametricFunction(u,v);  
     }
 

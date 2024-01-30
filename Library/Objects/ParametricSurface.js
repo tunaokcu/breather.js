@@ -27,306 +27,28 @@ export default class ParametricSurface extends GeometricObject{
             throw new Error("parametricFunction method must be implemented");
         }
 
+        this.mesh = new Mesh();
     }
 
-
-    //Indices are not good with more complex data apparently.
-    calculateAndStoreIndexBasedMesh(){
-        this.mesh = new Mesh();
-
-        let object = this;
-
-        let maxNum = 0;
-        let jMax = 0;
-        for (let u = object.uStart; u < object.uEnd; u += object.uDelta){
-
-            let j = 0;
-            for(let v = object.vStart; v < object.vEnd; v += object.vDelta){
-                //In the first pass, specify vertices
-                this.mesh.vertices.push([object.parametricFunction(u, v), vec3(0, 0, 0)]);
-
-                j += 1;
-                maxNum += 1;
-            }
-
-            jMax = j;
-        }
-
-        let i = 0;
-        for (let u = object.uStart; u < object.uEnd; u += object.uDelta){
-
-            let j = 0;
-            for(let v = object.vStart; v < object.vEnd; v += object.vDelta){
-
-
-                //Get indices
-                let a = (i * jMax + j )% maxNum;
-                let b = ((i+1)*jMax + j) % maxNum;
-                let c = (i * jMax + j + 1) % maxNum;
-                
-                //Get surface normal
-                let surfaceNormal =  this.calculateNormal(this.mesh.vertices[a][0],this.mesh.vertices[b][0], this.mesh.vertices[c][0])
-
-                //Add surface normal to each vertex normal
-                this.mesh.vertices[a][1] = add(this.mesh.vertices[a][1], surfaceNormal)
-                this.mesh.vertices[b][1] = add(this.mesh.vertices[b][1], surfaceNormal)
-                this.mesh.vertices[c][1] = add(this.mesh.vertices[c][1], surfaceNormal)
-
-                //Add polygon
-                this.mesh.polygons.push([a, b, c, surfaceNormal])
-            
-
-
-                //Get indices
-                a = (i * jMax + j + 1) % maxNum;
-                b = ((i+1)*jMax + j) % maxNum;
-                c = ((i+1)*jMax + j + 1) % maxNum;
-                
-                //Get surface normal
-                surfaceNormal =  this.calculateNormal(this.mesh.vertices[a][0],this.mesh.vertices[b][0], this.mesh.vertices[c][0])
-
-                //Add surface normal to each vertex normal
-                this.mesh.vertices[a][1] = add(this.mesh.vertices[a][1], surfaceNormal)
-                this.mesh.vertices[b][1] = add(this.mesh.vertices[b][1], surfaceNormal)
-                this.mesh.vertices[c][1] = add(this.mesh.vertices[c][1], surfaceNormal)
-
-                //Add polygon
-                this.mesh.polygons.push([a, b, c, surfaceNormal])
-
-                j += 1;
-            }
-
-            i += 1
-        }
-
-        this.normals = this.mesh.getNormals();
-        this.vertices = this.mesh.getVertices();
-        this.indices = this.mesh.getIndices();
     
-        /*
-        for (const polygon of this.mesh.polygons){
-            let [i1, i2, i3, disregard] = polygon
+    calculateMesh(){
+        this.mesh.calculate(this);
 
-            let v1, v2, v3;
-            let n1, n2, n3;
-            v1 = this.mesh.vertices[i1][0]
-            n1 = this.mesh.vertices[i1][1]
-
-            v2 = this.mesh.vertices[i2][0]
-            n2 = this.mesh.vertices[i2][1]
-
-            v3 = this.mesh.vertices[i3][0]
-            n3 = this.mesh.vertices[i3][1]
-
-            this.mesh.verticesToBuffer.push(v1);
-            this.mesh.verticesToBuffer.push(v2);
-            this.mesh.verticesToBuffer.push(v3);
-
-            this.mesh.normalsToBuffer.push(n1);
-            this.mesh.normalsToBuffer.push(n2);
-            this.mesh.normalsToBuffer.push(n3);
-
-        }*/
-
-        /*
-        console.log("With indices")
-        console.log(this.vertices);
-        console.log(this.normals);
-        console.log(this.vertices);
-        */
-        //So that it isn't recalculated and buffered needlessly
-        this.hasBeenUpdated = false;
+        this.numberOfVertices = this.mesh.normals.length / 3;
+        this.meshNotCalculated = false;
     }
 
-    calculateEverythingAndStoreInMeshStructure(){
-        this.mesh = new Mesh();
-
-        let object = this;
-
-        let maxNum = 0;
-        let jMax = 0;
-        for (let u = object.uStart; u < object.uEnd; u += object.uDelta){
-
-            let j = 0;
-            for(let v = object.vStart; v < object.vEnd; v += object.vDelta){
-                //In the first pass, specify vertices
-                this.mesh.vertices.push([object.parametricFunction(u, v), vec3(0, 0, 0)]);
-
-                j += 1;
-                maxNum += 1;
-            }
-
-            jMax = j;
-        }
-
-        let i = 0;
-        for (let u = object.uStart; u < object.uEnd; u += object.uDelta){
-
-            let j = 0;
-            for(let v = object.vStart; v < object.vEnd; v += object.vDelta){
-
-
-                //Get indices
-                let a = (i * jMax + j )% maxNum;
-                let b = ((i+1)*jMax + j) % maxNum;
-                let c = (i * jMax + j + 1) % maxNum;
-                
-                //Get surface normal
-                let surfaceNormal =  this.calculateNormal(this.mesh.vertices[a][0],this.mesh.vertices[b][0], this.mesh.vertices[c][0])
-
-                //Add surface normal to each vertex normal
-                this.mesh.vertices[a][1] = add(this.mesh.vertices[a][1], surfaceNormal)
-                this.mesh.vertices[b][1] = add(this.mesh.vertices[b][1], surfaceNormal)
-                this.mesh.vertices[c][1] = add(this.mesh.vertices[c][1], surfaceNormal)
-
-
-                //Add polygon
-                this.mesh.polygons.push([a, b, c, surfaceNormal])
-            
-
-
-                //Get indices
-                a = (i * jMax + j + 1) % maxNum;
-                b = ((i+1)*jMax + j) % maxNum;
-                c = ((i+1)*jMax + j + 1) % maxNum;
-                
-                //Get surface normal
-                surfaceNormal =  this.calculateNormal(this.mesh.vertices[a][0],this.mesh.vertices[b][0], this.mesh.vertices[c][0])
-
-                //Add surface normal to each vertex normal
-                this.mesh.vertices[a][1] = add(this.mesh.vertices[a][1], surfaceNormal)
-                this.mesh.vertices[b][1] = add(this.mesh.vertices[b][1], surfaceNormal)
-                this.mesh.vertices[c][1] = add(this.mesh.vertices[c][1], surfaceNormal)
-
-                //Add polygon
-                this.mesh.polygons.push([a, b, c, surfaceNormal])
-
-                j += 1;
-            }
-
-            i += 1
-        }
-
-
-
-        for (const polygon of this.mesh.polygons){
-            let [i1, i2, i3, disregard] = polygon
-
-            let v1, v2, v3;
-            let n1, n2, n3;
-            v1 = this.mesh.vertices[i1][0]
-            n1 = this.mesh.vertices[i1][1]
-
-            v2 = this.mesh.vertices[i2][0]
-            n2 = this.mesh.vertices[i2][1]
-
-            v3 = this.mesh.vertices[i3][0]
-            n3 = this.mesh.vertices[i3][1]
-
-            this.mesh.verticesToBuffer.push(v1);
-            this.mesh.verticesToBuffer.push(v2);
-            this.mesh.verticesToBuffer.push(v3);
-
-            this.mesh.normalsToBuffer.push(n1);
-            this.mesh.normalsToBuffer.push(n2);
-            this.mesh.normalsToBuffer.push(n3);
-
-        }
-
-        this.vertices = flatten(this.mesh.verticesToBuffer);
-        this.normals = flatten(this.mesh.normalsToBuffer);
-
-        //So that it isn't recalculated and buffered needlessly
-        this.hasBeenUpdated = false;
+    getVertices(){
+        return this.mesh.vertices;
     }
-    //not working..
-    experimentalVertexNormals(){
-        let object = this;
+    getTrueNormals(){
+        return this.mesh.normals;
+    }    
 
-        let surfaceNormals = {};
-
-        for (let u = object.uStart; u < object.uEnd; u += object.uDelta){
-            let uNext = u + object.uDelta < object.uEnd ? u + object.uDelta : object.uStart;//u + object.uDelta - object.uEnd;
-
-            for(let v = object.vStart; v < object.vEnd; v += object.vDelta){
-                let vNext = v + object.vDelta < object.vEnd ? v + object.vDelta : object.vStart;//v + object.vDelta - object.vEnd;
-
-                let a = this.parametricFunction(u, v);
-                let b = this.parametricFunction(uNext, v);
-                let c = this.parametricFunction(u, vNext);
-                let d = this.parametricFunction(uNext, vNext);
-
-                if (!surfaceNormals.hasOwnProperty(a)){
-                    surfaceNormals[a] = vec3(0,0,0);
-                }
-                if (!surfaceNormals.hasOwnProperty(b)){
-                    surfaceNormals[b] = vec3(0,0,0);
-                }        
-                if (!surfaceNormals.hasOwnProperty(c)){
-                    surfaceNormals[c] = vec3(0,0,0);
-                }
-                if (!surfaceNormals.hasOwnProperty(d)){
-                    surfaceNormals[d] = vec3(0,0,0);
-                }        
-
-                
-                function handle(a, b, c, obj){
-
-                    surfaceNormals[a] = add(surfaceNormals[a], obj.calculateNormal(a, b, c))                    
-                    surfaceNormals[a] = add(surfaceNormals[a], obj.calculateNormal(c, a, b))                    
-                    surfaceNormals[a] = add(surfaceNormals[a], obj.calculateNormal(b, c, a))  
-
-                    surfaceNormals[b] = add(surfaceNormals[b], obj.calculateNormal(a, b, c))                    
-                    surfaceNormals[b] = add(surfaceNormals[b], obj.calculateNormal(c, a, b))                    
-                    surfaceNormals[b] = add(surfaceNormals[b], obj.calculateNormal(b, c, a))
-        
-
-                    surfaceNormals[c] = add(surfaceNormals[c], obj.calculateNormal(a, b, c))                    
-                    surfaceNormals[c] = add(surfaceNormals[c], obj.calculateNormal(c, a, b))                    
-                    surfaceNormals[c] = add(surfaceNormals[c], obj.calculateNormal(b, c, a)) 
-                }
-
-                handle(a, b, c, this)            
-                handle(c, b, d, this)
-
-            }
-        }
-
-        let normals = [];
-        //With sruface normals calculated, just associate them with the vertices
-        for (let u = object.uStart; u < object.uEnd; u += object.uDelta){
-            let uNext = u + object.uDelta < object.uEnd ? u + object.uDelta : object.uStart;//u + object.uDelta - object.uEnd;
-
-            for(let v = object.vStart; v < object.vEnd; v += object.vDelta){
-                let vNext = v + object.vDelta < object.vEnd ? v + object.vDelta : object.vStart;//v + object.vDelta - object.vEnd;
-
-                let a = this.parametricFunction(u, v);
-                let b = this.parametricFunction(uNext, v);
-                let c = this.parametricFunction(u, vNext);
-                let d = this.parametricFunction(uNext, vNext);
-
-                normals.push(surfaceNormals[a]);
-                normals.push(surfaceNormals[b]);
-                normals.push(surfaceNormals[c]);
-                normals.push(surfaceNormals[c]);
-                normals.push(surfaceNormals[b]);
-                normals.push(surfaceNormals[d]);
-
-            }
-        }
-
-        return normals
-
+    trueNormalsSpecified(){
+        return typeof this.normalFunction === "function"
     }
 
-
-    //Good concept(encapsulating mesh sampling method in a function)
-    getSolidVertices(){
-        return this.iterator((u, v) => this.parametricFunction(u, v));
-    }
-    experimentalNormals(){
-        return this.iterator((u, v) => this.trueNormals(u, v));
-    }
     //Iterator function for vertex and normal sampling. This way if anything is to be changed about the sampling method, it can be done here.
     iterator(f){
         let object = this;
@@ -346,9 +68,8 @@ export default class ParametricSurface extends GeometricObject{
             }
         }
 
-        return vertices
+        return flatten(vertices)
     }
-
     samplingMethod(f, u, uPrev, uNext, v, vPrev, vNext){
         let vertices = [];
 
@@ -422,17 +143,12 @@ export default class ParametricSurface extends GeometricObject{
     }
 
 
-    //Ref: https://discourse.threejs.org/t/calculating-vertex-normals-after-displacement-in-the-vertex-shader/16989
-    calculateNormal(center, neighbor1, neighbor2){
-        let tangent = subtract(neighbor1, center);
-        let bitangent = subtract(neighbor2, center);
-        
-        return cross(tangent, bitangent); //No need to normalize, the vertex shader will handle that
-    }
 
 
 
 
+
+    /*
     //TODO cleanup
     getTrueNormals(){
         return this.experimentalNormals();
@@ -452,6 +168,7 @@ export default class ParametricSurface extends GeometricObject{
         
         return pointsInMesh;
     }
+    */
     /*
     sampleSolid(){
         let object = this;

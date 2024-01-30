@@ -49,10 +49,11 @@ export default class Plane extends GeometricObject{
         this.points.push(vertices[d]); //rightup
         this.normals.push(normal);   
 
+        this.meshNotCalculated = false;
     }
 
     getSolidVertices(){
-        return this.getVertices();
+        return flatten(this.getVertices());
     }
     //TODO should be lines not points
     getVertices(){
@@ -60,9 +61,13 @@ export default class Plane extends GeometricObject{
     }
 
     getVertexNormals(){
-        return this.normals;
+        return flatten(this.normals);
     }
 
+    normalFunction(){
+        return flatten(this.normals);
+    }
+    
     calculateEverythingAndStoreInMeshStructure(){
         this.vertices = flatten(this.points);
         this.normals = flatten(this.normals);
