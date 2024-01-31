@@ -5,6 +5,7 @@ import Camera from "./Camera.js";
 import AggregateLight from "./AggregateLight.js";
 import Sphere from "../Objects/Sphere.js";
 import SceneNode from "../Objects/SceneNode.js";
+import Shader from "./Shader/Shader.js";
 
 const MAX_TRIANGLES = 61204;//61204 for a single breather surface
 const MAX_VERTICES =  MAX_TRIANGLES*3;
@@ -36,7 +37,11 @@ export default class Scene{
 
         this.gl.viewport( 0, 0, this.canvas.width, this.canvas.height );
         this.gl.clearColor( ...backgroundColor );   
-    
+        
+        
+        this.shader = new Shader("vertex-shader", "fragment-shader");
+        this.shader.loadShaders();
+        //TODO can probably do this in Shader
         this.program = initShaders( this.gl, "vertex-shader", "fragment-shader" );
         this.gl.useProgram( this.program );   
     
