@@ -13,7 +13,7 @@ import TexturedCube from "./Library/Objects/TexturedCube/TexturedCube.js";
 import Hemisphere from "./Library/Objects/Hemisphere.js";
 
 window.onload = () => {
-    test();
+    breatherTest();
 }
 
 function cubeTest(){
@@ -56,7 +56,7 @@ function sphereTest(){
 
     scene.normalType = "trueNormals"
 
-    scene.treeRenderMultiLevel();
+    scene.safeRender();
     instantiateUI(scene);  
 }
 function breatherTest(){
@@ -68,32 +68,32 @@ function breatherTest(){
         scene.zoomIn();
     }
 
-    scene.treeRenderMultiLevel();
+    scene.safeRender();
     instantiateUI(scene);
 }
 function textureTest(){
     let scene = new Scene();
     scene.root.nodes.push(new SceneNode(new TexturedCube("/Library/Objects/TexturedCube/steve-head.png")));
-    scene.treeRenderMultiLevel();
+    scene.safeRender();
     instantiateUI(scene);  
 }
 function trueNormalTest(){
     let scene = new Scene();
     scene.root.nodes.push(new SceneNode(new Breather()));
     scene.normalType = "trueNormals";
-    scene.treeRenderMultiLevel();
+    scene.safeRender();
     instantiateUI(scene);  
 }
 function lightingTest(){
     let scene = new Scene();
     scene.root.nodes.push(new SceneNode(new Cube()));
-    scene.treeRenderMultiLevel();
+    scene.safeRender();
     instantiateUI(scene);
 }
 function hemisphereTest(){
     let scene = new Scene();
     scene.root.nodes.push(new SceneNode(new Hemisphere()));
-    scene.treeRenderMultiLevel();
+    scene.safeRender();
     instantiateUI(scene);
 }
 
@@ -212,7 +212,7 @@ function keydownHandler(event, scene, charNode){
     let offset = dir.map((coord) => coord*speed)
 
     charNode.translateBy = charNode.translateBy.map((e, i) => e + offset[i])
-    scene.treeRenderMultiLevel();
+    scene.safeRender();
 }
 
 
