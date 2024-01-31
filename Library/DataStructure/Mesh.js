@@ -34,17 +34,61 @@ export default class Mesh{
         this.normalsToBuffer = [];
     }
 
-    /*
-    sampleMesh(parametricSurface){
-        this.getMesh_PATCHES_WITHOUT_WRAP_AROUND(parametricSurface)
-    }*/
-    
     calculate(object){
         this.calculateLatest(object);
         //this.calculateEverythingAndStoreInMeshStructure(object);
     }
 
     //Latest calculate method
+    calculateLatest(object){
+        let vertices = [];
+        let normals = [];
+
+        for (let u = object.uStart; u < object.uEnd; u += object.uDelta){
+            let uNext = u + object.uDelta < object.uEnd ? u + object.uDelta : object.uStart;//u + object.uDelta - object.uEnd;
+
+            for (let v = object.vStart; v < object.vEnd; v += object.vDelta){
+                let vNext = v + object.vDelta < object.vEnd ? v + object.vDelta : object.vStart;//v + object.vDelta - object.vEnd;
+
+                //Discarding only the last vertex seems to work
+                if (u + object.uDelta >= object.uEnd && v + object.vDelta >= object.vEnd){ continue; }
+
+                let v1 = object.parametricFunction(u, v)
+                let v2 = object.parametricFunction(uNext, v)
+                let v3 = object.parametricFunction(u, vNext)
+                let v4 = object.parametricFunction(u, vNext);
+                let v5 = object.parametricFunction(uNext, vNext);
+                let v6 = object.parametricFunction(uNext, v);
+
+                let n1 = object.normalFunction(u, v)
+                let n2 = object.normalFunction(uNext, v)
+                let n3 = object.normalFunction(u, vNext)
+                let n4 = object.normalFunction(u, vNext);
+                let n5 = object.normalFunction(uNext, vNext);
+                let n6 = object.normalFunction(uNext, v);
+
+                vertices.push(v1);
+                vertices.push(v2);
+                vertices.push(v3);
+                vertices.push(v4)
+                vertices.push(v5)
+                vertices.push(v6)
+
+                normals.push(n1);
+                normals.push(n2);
+                normals.push(n3);
+                normals.push(n4)
+                normals.push(n5)
+                normals.push(n6)
+            }
+        }
+
+        this.vertices = flatten(vertices)
+        this.normals = flatten(normals);
+
+    }
+
+    //Latest calculate method. Doesn't wrap around
     calculateLatest(object){
         let vertices = [];
         let normals = [];
@@ -189,7 +233,6 @@ export default class Mesh{
         this.normals = flatten(this.mesh.normalsToBuffer);
     }
 
-    //We still need to 
     getMesh_PATCHES_WITHOUT_WRAP_AROUND(object){
 
         let maxNum = 0;
